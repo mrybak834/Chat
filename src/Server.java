@@ -114,7 +114,6 @@ class ConnectionThread extends Thread
          {
            System.out.println ("Waiting for Connection");
            gui.ssButton.setText("Stop Listening");
-             //TODO
            new CommunicationThread (gui.serverSocket.accept(), gui, socketVector);
          }
        } 
@@ -167,40 +166,51 @@ class CommunicationThread extends Thread
    {
     System.out.println ("New Communication Thread Started");
 
-    try { 
-         PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), 
-                                      true); 
-         BufferedReader in = new BufferedReader( 
-                 new InputStreamReader( clientSocket.getInputStream())); 
+    try {
 
-         String inputLine;
+            PrintWriter out = new PrintWriter(clientSocket.getOutputStream(),
+                    true);
+            BufferedReader in = new BufferedReader(
+                    new InputStreamReader(clientSocket.getInputStream()));
 
-        System.out.println(clientSocket);
+            String inputLine;
+
 
         for(Socket s : socketVector){
             System.out.println("VECTOR:" + s);
         }
 
+            while ((inputLine = in.readLine()) != null) {
+                System.out.println("Server: " + inputLine);
+                gui.history.insert(inputLine + "\n", 0);
 
-         while ((inputLine = in.readLine()) != null) 
-             { 
-              System.out.println ("Server: " + inputLine); 
-              gui.history.insert (inputLine+"\n", 0);
-              out.println(inputLine); 
+                //@TEST
+                for(Socket s : socketVector){
+                    out = new PrintWriter(s.getOutputStream(),
+                            true);
+                    out.println(inputLine);
+                    System.out.println(s);
+                    System.out.println(inputLine);
 
-              if (inputLine.equals("Bye.")) 
-                  break; 
+                }
 
-              if (inputLine.equals("End Server.")) 
-                  gui.serverContinue = false; 
-             } 
+                //out.println(inputLine);
 
-         out.close(); 
-         in.close(); 
-         clientSocket.close(); 
+                if (inputLine.equals("Bye."))
+                    break;
+
+                if (inputLine.equals("End Server."))
+                    gui.serverContinue = false;
+
+            }
+
+            out.close();
+            in.close();
+            clientSocket.close();
         } 
     catch (IOException e) 
-        { 
+        {
+            //LOGOUT CLIENTS HERE (REMOVE FROM VECTOR)
          System.err.println("Problem with Communication Server");
          //System.exit(1); 
         } 
