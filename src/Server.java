@@ -2,6 +2,7 @@ import java.net.*;
 import java.io.*; 
 import java.awt.*;
 import java.awt.event.*;
+import java.util.Vector;
 import javax.swing.*;
 
 public class Server extends JFrame implements ActionListener{
@@ -54,7 +55,7 @@ public class Server extends JFrame implements ActionListener{
       
       people = new JTextArea ( 10, 25 );
       people.setEditable(false);
-      people.append("Clients connnected to the server:\n");
+      people.append("Clients connected to the server:\n");
       container.add( new JScrollPane(people) );
 
       setSize( 500, 420 );
@@ -90,10 +91,12 @@ public class Server extends JFrame implements ActionListener{
 class ConnectionThread extends Thread
  {
    Server gui;
+     public Vector<Socket> socketVector;
    
    public ConnectionThread (Server es3)
    {
      gui = es3;
+       socketVector = new Vector<>();
      start();
    }
    
@@ -111,7 +114,8 @@ class ConnectionThread extends Thread
          {
            System.out.println ("Waiting for Connection");
            gui.ssButton.setText("Stop Listening");
-           new CommunicationThread (gui.serverSocket.accept(), gui); 
+             //TODO
+           new CommunicationThread (gui.serverSocket.accept(), gui, socketVector);
          }
        } 
        catch (IOException e) 
@@ -145,12 +149,16 @@ class CommunicationThread extends Thread
  //private boolean serverContinue = true;
  private Socket clientSocket;
  private Server gui;
+    public Vector<Socket> socketVector;
 
 
 
- public CommunicationThread (Socket clientSoc, Server ec3)
+ public CommunicationThread (Socket clientSoc, Server ec3, Vector<Socket> socketVectorg)
    {
     clientSocket = clientSoc;
+       socketVectorg.add(clientSocket);
+       this.socketVector = socketVectorg;
+       //socketVector.add(clientSocket);
     gui = ec3;
     start();
    }
@@ -165,7 +173,14 @@ class CommunicationThread extends Thread
          BufferedReader in = new BufferedReader( 
                  new InputStreamReader( clientSocket.getInputStream())); 
 
-         String inputLine; 
+         String inputLine;
+
+        System.out.println(clientSocket);
+
+        for(Socket s : socketVector){
+            System.out.println("VECTOR:" + s);
+        }
+
 
          while ((inputLine = in.readLine()) != null) 
              { 

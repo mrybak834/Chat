@@ -98,7 +98,6 @@ public class Client extends JFrame implements ActionListener
        else if (event.getSource() == connectButton)
        {
          doManageConnection();
-           print;
        }
     }
 
