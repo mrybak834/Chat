@@ -18,6 +18,7 @@ public class Server extends JFrame implements ActionListener{
   // Network Items
   boolean serverContinue;
   ServerSocket serverSocket;
+    public Vector<Socket> socketVector;
 
    // set up GUI
    public Server()
@@ -178,11 +179,9 @@ class CommunicationThread extends Thread
             socketVector.add(out);
 
 
-
-
-        for(PrintWriter s : socketVector){
-            System.out.println("VECTOR:" + s);
-        }
+//        for(PrintWriter s : socketVector){
+//            System.out.println("VECTOR:" + s);
+//        }
 
             while ((inputLine = in.readLine()) != null) {
                 System.out.println("Server: " + inputLine);

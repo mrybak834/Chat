@@ -2,7 +2,10 @@ import java.net.*;
 import java.io.*; 
 import java.awt.*;
 import java.awt.event.*;
+import java.util.Vector;
 import javax.swing.*;
+
+import static java.lang.Thread.sleep;
 
 public class Client extends JFrame implements ActionListener
 {  
@@ -105,15 +108,49 @@ public class Client extends JFrame implements ActionListener
     {
       try
       {
-          out.println(username.getText() + ": " + message.getText());
-        history.insert (in.readLine() + "\n" , 0);
+
+              out.println(username.getText() + ": " + message.getText());
+              //history.insert(in.readLine() + "\n", 0);
+
+
       }
-      catch (IOException e) 
-      {
-        history.insert ("Error in processing message ", 0);
+      catch (Exception e) {
+          history.insert("Error in processing message ", 0);
       }
     }
-    
+
+
+    public class messageReceiverThread extends Thread{
+        BufferedReader in;
+
+        public messageReceiverThread(BufferedReader in){
+            this.in = in;
+        }
+        public void run() {
+            while(true){
+                try {
+                    while(in.ready()) {
+                        String line;
+                        System.out.println("GOT HERE");
+
+                        line = in.readLine();
+
+
+                        System.out.println("GOT HERE2");
+                        history.insert(line + "\n", 0);
+                        System.out.println("GOT HERE3");
+                    }
+
+                    //System.out.println(line);
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    System.out.println("EXCEPTION THROWN");
+                }
+            }
+        }
+    }
+
     public void doManageConnection()
     {
       if (connected == false)
@@ -130,6 +167,20 @@ public class Client extends JFrame implements ActionListener
             sendButton.setEnabled(true);
             connected = true;
             connectButton.setText("Disconnect from Server");
+
+            messageReceiverThread t = new messageReceiverThread(in);
+            t.start();
+
+
+
+
+//            while(true){
+//                System.out.println("Got here");
+//                if(in.readLine() == null)
+//                    System.out.println("got here2");
+//
+//                history.insert(in.readLine(), 0);
+//            }
         } catch (NumberFormatException e) {
             history.insert ( "Server Port must be an integer\n", 0);
         } catch (UnknownHostException e) {
