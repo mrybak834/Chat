@@ -91,7 +91,7 @@ public class Server extends JFrame implements ActionListener{
 class ConnectionThread extends Thread
  {
    Server gui;
-     public Vector<Socket> socketVector;
+     public Vector<PrintWriter> socketVector;
    
    public ConnectionThread (Server es3)
    {
@@ -114,7 +114,8 @@ class ConnectionThread extends Thread
          {
            System.out.println ("Waiting for Connection");
            gui.ssButton.setText("Stop Listening");
-           new CommunicationThread (gui.serverSocket.accept(), gui, socketVector);
+           CommunicationThread thread = new CommunicationThread (gui.serverSocket.accept(), gui, socketVector);
+             thread.start();
          }
        } 
        catch (IOException e) 
@@ -148,18 +149,17 @@ class CommunicationThread extends Thread
  //private boolean serverContinue = true;
  private Socket clientSocket;
  private Server gui;
-    public Vector<Socket> socketVector;
+    public Vector<PrintWriter> socketVector;
 
 
 
- public CommunicationThread (Socket clientSoc, Server ec3, Vector<Socket> socketVectorg)
+ public CommunicationThread (Socket clientSoc, Server ec3, Vector<PrintWriter> socketVectorg)
    {
     clientSocket = clientSoc;
-       socketVectorg.add(clientSocket);
+       //socketVectorg.add(clientSocket);
        this.socketVector = socketVectorg;
        //socketVector.add(clientSocket);
     gui = ec3;
-    start();
    }
 
  public void run()
@@ -175,8 +175,12 @@ class CommunicationThread extends Thread
 
             String inputLine;
 
+            socketVector.add(out);
 
-        for(Socket s : socketVector){
+
+
+
+        for(PrintWriter s : socketVector){
             System.out.println("VECTOR:" + s);
         }
 
@@ -185,10 +189,8 @@ class CommunicationThread extends Thread
                 gui.history.insert(inputLine + "\n", 0);
 
                 //@TEST
-                for(Socket s : socketVector){
-                    out = new PrintWriter(s.getOutputStream(),
-                            true);
-                    out.println(inputLine);
+                for(PrintWriter s : socketVector){
+                    s.println(inputLine);
                     System.out.println(s);
                     System.out.println(inputLine);
 
