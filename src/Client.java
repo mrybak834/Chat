@@ -86,7 +86,28 @@ public class Client extends JFrame implements ActionListener
    public static void main( String args[] )
    { 
       Client application = new Client();
-      application.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
+
+       //If the client exits, make sure to disconnect them as well
+       application.addWindowListener(new WindowAdapter() {
+           @Override
+           public void windowClosing(WindowEvent e) {
+               try {
+                   System.out.println("CLOSING");
+
+                   if(application.echoSocket != null && application.echoSocket.isConnected()) {
+                       //Tell the server to decrease the vector of sockets
+                       //TODO
+
+
+                       application.echoSocket.close();
+                   }
+               } catch (IOException e1) {
+                   e1.printStackTrace();
+               }
+           }
+       });
+
+       application.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
    }
 
     // handle button event
@@ -131,14 +152,8 @@ public class Client extends JFrame implements ActionListener
                 try {
                     while(in.ready()) {
                         String line;
-                        System.out.println("GOT HERE");
-
                         line = in.readLine();
-
-
-                        System.out.println("GOT HERE2");
                         history.insert(line + "\n", 0);
-                        System.out.println("GOT HERE3");
                     }
 
                     //System.out.println(line);
@@ -171,16 +186,6 @@ public class Client extends JFrame implements ActionListener
             messageReceiverThread t = new messageReceiverThread(in);
             t.start();
 
-
-
-
-//            while(true){
-//                System.out.println("Got here");
-//                if(in.readLine() == null)
-//                    System.out.println("got here2");
-//
-//                history.insert(in.readLine(), 0);
-//            }
         } catch (NumberFormatException e) {
             history.insert ( "Server Port must be an integer\n", 0);
         } catch (UnknownHostException e) {

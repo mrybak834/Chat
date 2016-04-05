@@ -179,21 +179,19 @@ class CommunicationThread extends Thread
             socketVector.add(out);
 
 
-//        for(PrintWriter s : socketVector){
-//            System.out.println("VECTOR:" + s);
-//        }
 
             while ((inputLine = in.readLine()) != null) {
                 System.out.println("Server: " + inputLine);
                 gui.history.insert(inputLine + "\n", 0);
 
-                //@TEST
+
                 for(PrintWriter s : socketVector){
                     s.println(inputLine);
-                    System.out.println(s);
-                    System.out.println(inputLine);
+                    //System.out.println(s);
+                    //System.out.println(inputLine);
 
                 }
+
 
                 //out.println(inputLine);
 
@@ -203,11 +201,28 @@ class CommunicationThread extends Thread
                 if (inputLine.equals("End Server."))
                     gui.serverContinue = false;
 
+                if (inputLine.equals("!DISCONNECT ME!")){
+                    //TODO
+                }
+
+
+            }
+
+            //Remove client from vector
+            for( int i = 0; i < socketVector.size(); i++){
+                if(socketVector.elementAt(i) == out){
+                    socketVector.remove(i);
+                }
             }
 
             out.close();
             in.close();
             clientSocket.close();
+
+
+            System.out.println(socketVector.size());
+
+
         } 
     catch (IOException e) 
         {
