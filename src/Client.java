@@ -240,10 +240,20 @@ public class Client extends JFrame implements ActionListener
                                 String[] names = nameSubstring.split("\\s*,\\s*");
 
 
-                                //TODO
                                 //Blank out repeated names
+                                int x = names.length;
 
+                                for(int y = 0; y < x; y++){
+                                    String nameAtPosition = names[y];
+                                    for(int z = 0; z < x; z++){
+                                        //If the names are the same and at a different position, blank out
+                                        if(names[z].equals(nameAtPosition) && (y != z)){
+                                            names[z] = "";
+                                        }
+                                    }
+                                }
 
+                                
                                 for(String s: names){
                                     //If the string was sent to us, display
                                     if(username.getText().equals(s)){
