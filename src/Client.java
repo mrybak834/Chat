@@ -85,7 +85,7 @@ public class Client extends JFrame implements ActionListener
 
    public static void main( String args[] )
    { 
-      Client application = new Client();
+       final Client application = new Client();
 
        //If the client exits, make sure to disconnect them as well
        application.addWindowListener(new WindowAdapter() {

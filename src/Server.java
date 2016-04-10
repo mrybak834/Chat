@@ -187,13 +187,8 @@ class CommunicationThread extends Thread
 
                 for(PrintWriter s : socketVector){
                     s.println(inputLine);
-                    //System.out.println(s);
-                    //System.out.println(inputLine);
-
                 }
 
-
-                //out.println(inputLine);
 
                 if (inputLine.equals("Bye."))
                     break;
@@ -208,6 +203,7 @@ class CommunicationThread extends Thread
 
             }
 
+            System.out.println("GOT HERE HERE'S MY SOCKET:" + clientSocket);
             //Remove client from vector
             for( int i = 0; i < socketVector.size(); i++){
                 if(socketVector.elementAt(i) == out){
