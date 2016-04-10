@@ -1,173 +1,173 @@
-import java.net.*; 
-import java.io.*; 
+import java.net.*;
+import java.io.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.Vector;
 import javax.swing.*;
 
 public class Server extends JFrame implements ActionListener{
-  
-  // GUI items
-  JButton ssButton;
-  JLabel machineInfo;
-  JLabel portInfo;
-  JTextArea history;
-  JTextArea people;
-  private boolean running;
 
-  // Network Items
-  boolean serverContinue;
-  ServerSocket serverSocket;
+    // GUI items
+    JButton ssButton;
+    JLabel machineInfo;
+    JLabel portInfo;
+    JTextArea history;
+    private boolean running;
+
+    // Network Items
+    boolean serverContinue;
+    ServerSocket serverSocket;
     public Vector<Socket> socketVector;
 
-   // set up GUI
-   public Server()
-   {
-      super( "Echo Server" );
+    // set up GUI
+    public Server()
+    {
+        super( "Echo Server" );
 
-      // get content pane and set its layout
-      Container container = getContentPane();
-      container.setLayout( new FlowLayout() );
+        // get content pane and set its layout
+        Container container = getContentPane();
+        container.setLayout( new FlowLayout() );
 
-      // create buttons
-      running = false;
-      ssButton = new JButton( "Start Listening" );
-      ssButton.addActionListener( this );
-      container.add( ssButton );
+        // create buttons
+        running = false;
+        ssButton = new JButton( "Start Listening" );
+        ssButton.addActionListener( this );
+        container.add( ssButton );
 
-      String machineAddress = null;
-      try
-      {  
-        InetAddress addr = InetAddress.getLocalHost();
-        machineAddress = addr.getHostAddress();
-      }
-      catch (UnknownHostException e)
-      {
-        machineAddress = "127.0.0.1";
-      }
-      machineInfo = new JLabel (machineAddress);
-      container.add( machineInfo );
-      portInfo = new JLabel (" Not Listening ");
-      container.add( portInfo );
+        String machineAddress = null;
+        try
+        {
+            InetAddress addr = InetAddress.getLocalHost();
+            machineAddress = addr.getHostAddress();
+        }
+        catch (UnknownHostException e)
+        {
+            machineAddress = "127.0.0.1";
+        }
+        machineInfo = new JLabel (machineAddress);
+        container.add( machineInfo );
+        portInfo = new JLabel (" Not Listening ");
+        container.add( portInfo );
 
-      history = new JTextArea ( 10, 40 );
-      history.setEditable(false);
-      container.add( new JScrollPane(history) );
-      
-      people = new JTextArea ( 10, 25 );
-      people.setEditable(false);
-      people.append("Clients connected to the server:\n");
-      container.add( new JScrollPane(people) );
+        history = new JTextArea ( 10, 40 );
+        history.setEditable(false);
+        container.add( new JScrollPane(history) );
 
-      setSize( 500, 420 );
-      setVisible( true );
+        setSize( 500, 420 );
+        setVisible( true );
 
-   } // end CountDown constructor
+    } // end CountDown constructor
 
-   public static void main( String args[] )
-   { 
-      Server application = new Server();
-      application.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
-   }
+    public static void main( String args[] )
+    {
+        Server application = new Server();
+        application.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
+    }
 
     // handle button event
     public void actionPerformed( ActionEvent event )
     {
-       if (running == false)
-       {
-         new ConnectionThread (this);
-       }
-       else
-       {
-         serverContinue = false;
-         ssButton.setText ("Start Listening");
-         portInfo.setText (" Not Listening ");
-       }
+        if (running == false)
+        {
+            new ConnectionThread (this);
+        }
+        else
+        {
+            serverContinue = false;
+            ssButton.setText ("Start Listening");
+            portInfo.setText (" Not Listening ");
+        }
     }
 
 
- } // end class EchoServer3
+} // end class EchoServer3
 
 
 class ConnectionThread extends Thread
- {
-   Server gui;
-     public Vector<PrintWriter> socketVector;
-   
-   public ConnectionThread (Server es3)
-   {
-     gui = es3;
-       socketVector = new Vector<>();
-     start();
-   }
-   
-   public void run()
-   {
-     gui.serverContinue = true;
-     
-     try 
-     { 
-       gui.serverSocket = new ServerSocket(0); 
-       gui.portInfo.setText("Listening on Port: " + gui.serverSocket.getLocalPort());
-       System.out.println ("Connection Socket Created");
-       try { 
-         while (gui.serverContinue)
-         {
-           System.out.println ("Waiting for Connection");
-           gui.ssButton.setText("Stop Listening");
-           CommunicationThread thread = new CommunicationThread (gui.serverSocket.accept(), gui, socketVector);
-             thread.start();
-         }
-       } 
-       catch (IOException e) 
-       { 
-         System.err.println("Accept failed."); 
-         System.exit(1); 
-       } 
-     } 
-     catch (IOException e) 
-     { 
-       System.err.println("Could not listen on port: 10008."); 
-       System.exit(1); 
-     } 
-     finally
-     {
-       try {
-         gui.serverSocket.close(); 
-       }
-       catch (IOException e)
-       { 
-         System.err.println("Could not close port: 10008."); 
-         System.exit(1); 
-       } 
-     }
-   }
- }
- 
+{
+    Server gui;
+    public Vector<PrintWriter> socketVector;
+    public Vector<Socket> socket;
+
+    public ConnectionThread (Server es3)
+    {
+        gui = es3;
+        socketVector = new Vector<>();
+        socket = new Vector<>();
+        start();
+    }
+
+    public void run()
+    {
+        gui.serverContinue = true;
+
+        try
+        {
+            gui.serverSocket = new ServerSocket(0);
+            gui.portInfo.setText("Listening on Port: " + gui.serverSocket.getLocalPort());
+            System.out.println ("Connection Socket Created");
+            try {
+                while (gui.serverContinue)
+                {
+                    System.out.println ("Waiting for Connection");
+                    gui.ssButton.setText("Stop Listening");
+                    CommunicationThread thread = new CommunicationThread (gui.serverSocket.accept(), gui, socketVector,socket);
+                    thread.start();
+                }
+            }
+            catch (IOException e)
+            {
+                System.err.println("Accept failed.");
+                System.exit(1);
+            }
+        }
+        catch (IOException e)
+        {
+            System.err.println("Could not listen on port: 10008.");
+            System.exit(1);
+        }
+        finally
+        {
+            try {
+                gui.serverSocket.close();
+            }
+            catch (IOException e)
+            {
+                System.err.println("Could not close port: 10008.");
+                System.exit(1);
+            }
+        }
+    }
+}
+
 
 class CommunicationThread extends Thread
-{ 
- //private boolean serverContinue = true;
- private Socket clientSocket;
- private Server gui;
+{
+    //private boolean serverContinue = true;
+    private Socket clientSocket;
+    private Server gui;
     public Vector<PrintWriter> socketVector;
+    public Vector<Socket> socket;
+
+
+    public CommunicationThread (Socket clientSoc, Server ec3, Vector<PrintWriter> socketVectorg, Vector<Socket> sock)
+    {
+        clientSocket = clientSoc;
+        sock.add(clientSocket);
+        this.socket = sock;
+        this.socketVector = socketVectorg;
+        //socketVector.add(clientSocket);
+        gui = ec3;
 
 
 
- public CommunicationThread (Socket clientSoc, Server ec3, Vector<PrintWriter> socketVectorg)
-   {
-    clientSocket = clientSoc;
-       //socketVectorg.add(clientSocket);
-       this.socketVector = socketVectorg;
-       //socketVector.add(clientSocket);
-    gui = ec3;
-   }
+    }
 
- public void run()
-   {
-    System.out.println ("New Communication Thread Started");
+    public void run()
+    {
+        System.out.println ("New Communication Thread Started");
 
-    try {
+        try {
 
             PrintWriter out = new PrintWriter(clientSocket.getOutputStream(),
                     true);
@@ -187,8 +187,16 @@ class CommunicationThread extends Thread
 
                 for(PrintWriter s : socketVector){
                     s.println(inputLine);
+
+                    for(Socket t : socket){
+                        int x = t.getPort();
+                        s.println(x);
+                    }
+
                 }
 
+
+                //out.println(inputLine);
 
                 if (inputLine.equals("Bye."))
                     break;
@@ -203,7 +211,6 @@ class CommunicationThread extends Thread
 
             }
 
-            System.out.println("GOT HERE HERE'S MY SOCKET:" + clientSocket);
             //Remove client from vector
             for( int i = 0; i < socketVector.size(); i++){
                 if(socketVector.elementAt(i) == out){
@@ -219,18 +226,12 @@ class CommunicationThread extends Thread
             System.out.println(socketVector.size());
 
 
-        } 
-    catch (IOException e) 
+        }
+        catch (IOException e)
         {
             //LOGOUT CLIENTS HERE (REMOVE FROM VECTOR)
-         System.err.println("Problem with Communication Server");
-         //System.exit(1); 
-        } 
+            System.err.println("Problem with Communication Server");
+            //System.exit(1);
+        }
     }
-} 
-
-
-
-
-
- 
+}
