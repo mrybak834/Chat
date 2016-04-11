@@ -210,8 +210,9 @@ public class Client extends JFrame implements ActionListener
                         //If we receive a connection socket
                         if( line.startsWith("~SOCKETS_INCOMING!"))
                         {
-                            people.setText("");
-                            people.append("Clients connected to the server: \n");
+
+                            //Reset vector
+                            currentClientList.removeAllElements();
 
                             while(in.ready()) {
 
@@ -232,6 +233,7 @@ public class Client extends JFrame implements ActionListener
                                 }
 
                                 //If the name is already in the list, error
+                                //TODO
 //                                for (String s : currentClientList) {
 //                                    if (s.equals(line.substring(line.lastIndexOf('!') + 1))) {
 //                                        JOptionPane.showMessageDialog(null, "Name duplicate, pick a different name and reconnect or you will not be recognized", "Error",
@@ -357,6 +359,9 @@ public class Client extends JFrame implements ActionListener
                 //Get the list of clients
                 doSendActivationMessage();
 
+                //Disable username changing
+                username.setEnabled(false);
+
             } catch (NumberFormatException e) {
                 history.insert ( "Server Port must be an integer\n", 0);
             } catch (UnknownHostException e) {
@@ -371,6 +376,9 @@ public class Client extends JFrame implements ActionListener
         {
             try
             {
+                //Enable username changing
+                username.setEnabled(true);
+
                 out.close();
                 in.close();
                 echoSocket.close();

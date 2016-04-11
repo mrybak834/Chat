@@ -204,11 +204,6 @@ class CommunicationThread extends Thread
                     }
                     s.println("~SOCKETS_ENDED!");
 
-//                    for(Socket t : socket){
-//                        int x = t.getPort();
-//                        s.println(x);
-//                    }
-
                 }
 
 
@@ -233,6 +228,7 @@ class CommunicationThread extends Thread
             for( int i = 0; i < socketVector.size(); i++){
                 if(socketVector.elementAt(i) == out){
                     socketVector.remove(i);
+                    nameVector.remove(i);
                 }
             }
 
@@ -243,6 +239,20 @@ class CommunicationThread extends Thread
 
             System.out.println(socketVector.size());
 
+            for(String s: nameVector){
+                System.out.println("NAME: " + s);
+            }
+
+            //Refresh client list
+            for(PrintWriter s : socketVector){
+
+                s.println("~SOCKETS_INCOMING!");
+                for(String t: nameVector){
+                    s.println(t);
+                }
+                s.println("~SOCKETS_ENDED!");
+
+            }
 
         }
         catch (IOException e)
