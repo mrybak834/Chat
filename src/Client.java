@@ -16,6 +16,8 @@ import static java.lang.Thread.sleep;
  * 3. Check client disconnects properly
  * 4. Fix UI
  * 5. No ~ or , or ! in username or private message names
+ * 6. Check for illegal message ~SOCKET_INCOMING! and ~NEW_CONNECTION!
+ * 7. Deactivate name field after connection
  */
 
 public class Client extends JFrame implements ActionListener
@@ -36,6 +38,7 @@ public class Client extends JFrame implements ActionListener
     Socket echoSocket;
     PrintWriter out;
     BufferedReader in;
+    Vector<String> currentClientList;
 
     // set up GUI
     public Client()
@@ -99,6 +102,8 @@ public class Client extends JFrame implements ActionListener
         setSize( 800, 400 );
         setVisible( true );
 
+        currentClientList = new Vector<>();
+
     } // end CountDown constructor
 
     public static void main( String args[] )
@@ -154,7 +159,7 @@ public class Client extends JFrame implements ActionListener
             }
             //Private message
             else{
-                out.println("!" + sendToNames.getText() + "," + username.getText() + "~" + username.getText() + ": " + message.getText());
+                out.println("!" + sendToNames.getText() + "," + username.getText() + "~" + username.getText() + ":" + message.getText());
             }
 
 
@@ -170,7 +175,7 @@ public class Client extends JFrame implements ActionListener
         try
         {
 
-            out.println(" " + " " + " " );
+            out.println(username.getText() + ":" + "~NEW_CONNECTION!" );
 
         }
         catch (Exception e) {
@@ -188,7 +193,7 @@ public class Client extends JFrame implements ActionListener
 
         public void run() {
             int i = 0;
-            String[] line = new String[10];
+            String line;
             int count = 0;
 
             while(true){
@@ -196,49 +201,44 @@ public class Client extends JFrame implements ActionListener
                 try {
 
                     while(in.ready()) {
-                        line[i] = in.readLine();
-                        char c = line[i].charAt(0);
+                        line = in.readLine();
+                        char c = line.charAt(0);
 
-                        if( ((int) c > 47) && ((int) c < 58) )
+
+                        System.out.println("GOT HERE");
+                        //If we receive a socket
+                        if( line.startsWith("~SOCKET_INCOMING!"))
                         {
+                            System.out.println("GOT HEREERERERERERER. SOCKET:" + line);
                             people.setText("");
                             people.append("Clients connected to the server: \n");
 
-                            for(int k = 0; k < i; k++)
-                            {
-                                if(line[i].equals(line[k]))
-                                    count++;
-                            }
 
-                            if(count == 0)
-                            {
-                                i++;
-                            }
-                            line[i] = "";
+                            //Get the user name
+                            currentClientList.add(line.substring(line.lastIndexOf('!') + 1));
 
-
-                            for(int j = 0;j < 10; j ++)
-                            {
-                                if(line[j] != null)
-                                    people.append(line[j] + "\n");
-
+                            //Add to user list
+                            for(String s: currentClientList){
+                                people.append(s + "\n");
                             }
 
                         }
                         //Print message to chat pane
                         else {
                             //Check if the message is meant for the user
-                            if(line[i].charAt(0) == '!'){
+                            if(line.charAt(0) == '!'){
                                 //Get the list of names
-                                String userString = line[i];
-                                String nameSubstring = line[i].substring(userString.indexOf('!') + 1, userString.indexOf('~'));
+                                String userString = line;
+                                String nameSubstring = line.substring(userString.indexOf('!') + 1, userString.indexOf('~'));
 
                                 //Get the string to be displayed
-                                String displayString = line[i].substring(userString.indexOf('~')+1);
+                                String displayString = line.substring(userString.indexOf('~')+1);
 
                                 //Split the names up, ignoring commas and whitespace
                                 String[] names = nameSubstring.split("\\s*,\\s*");
 
+                                //Split the remaining message into the actual message and the senders name
+                                String[] sender_and_message = displayString.split(":");
 
                                 //Blank out repeated names
                                 int x = names.length;
@@ -253,17 +253,35 @@ public class Client extends JFrame implements ActionListener
                                     }
                                 }
 
-                                
+                                String chatNames = "";
                                 for(String s: names){
                                     //If the string was sent to us, display
                                     if(username.getText().equals(s)){
-                                        history.insert("PRIVATE: " + displayString + "\n", 0);
+
+                                        if(sender_and_message[0].equals(username.getText())){
+                                            int z = 0;
+                                            for(String n: names) {
+                                                //Account for comma
+                                                if (z == 0 && !n.equals(username.getText())) {
+                                                    chatNames = chatNames + n;
+                                                    z++;
+                                                }
+                                                else if (!n.equals(username.getText())) {
+                                                    chatNames = chatNames + ", " + n;
+                                                }
+                                            }
+
+                                            history.insert("PRIVATE (with " + chatNames + " ) : " + sender_and_message[1] + "\n", 0);
+                                        }
+                                        else{
+                                            chatNames = sender_and_message[0];
+                                            history.insert("PRIVATE (with " + sender_and_message[0] + " ) : " + sender_and_message[1] + "\n", 0);
+                                        }
                                     }
                                 }
-
                             }
                             else{
-                                history.insert(line[i] + "\n", 0);
+                                history.insert(line + "\n", 0);
                             }
                         }
 

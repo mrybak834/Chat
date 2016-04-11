@@ -88,12 +88,14 @@ class ConnectionThread extends Thread
     Server gui;
     public Vector<PrintWriter> socketVector;
     public Vector<Socket> socket;
+    public Vector<String> nameVector;
 
     public ConnectionThread (Server es3)
     {
         gui = es3;
         socketVector = new Vector<>();
         socket = new Vector<>();
+        nameVector = new Vector<>();
         start();
     }
 
@@ -111,7 +113,7 @@ class ConnectionThread extends Thread
                 {
                     System.out.println ("Waiting for Connection");
                     gui.ssButton.setText("Stop Listening");
-                    CommunicationThread thread = new CommunicationThread (gui.serverSocket.accept(), gui, socketVector,socket);
+                    CommunicationThread thread = new CommunicationThread (gui.serverSocket.accept(), gui, socketVector,socket, nameVector);
                     thread.start();
                 }
             }
@@ -148,19 +150,17 @@ class CommunicationThread extends Thread
     private Server gui;
     public Vector<PrintWriter> socketVector;
     public Vector<Socket> socket;
+    public Vector<String> nameVector;
 
 
-    public CommunicationThread (Socket clientSoc, Server ec3, Vector<PrintWriter> socketVectorg, Vector<Socket> sock)
+    public CommunicationThread (Socket clientSoc, Server ec3, Vector<PrintWriter> socketVectorg, Vector<Socket> sock, Vector<String> nameVectorg)
     {
         clientSocket = clientSoc;
         sock.add(clientSocket);
         this.socket = sock;
         this.socketVector = socketVectorg;
-        //socketVector.add(clientSocket);
+        this.nameVector = nameVectorg;
         gui = ec3;
-
-
-
     }
 
     public void run()
@@ -184,16 +184,30 @@ class CommunicationThread extends Thread
                 System.out.println("Server: " + inputLine);
                 gui.history.insert(inputLine + "\n", 0);
 
+                //Add the client name
+                String[] nameSplit = inputLine.split(":");
+
+                if(nameSplit[1] != null && nameSplit[1].startsWith("~NEW_CONNECTION!")) {
+                        System.out.println("GOT HERE " + nameSplit[0]);
+                        nameVector.add(nameSplit[0]);
+                }
+
 
                 for(PrintWriter s : socketVector){
                     s.println(inputLine);
 
-                    for(Socket t : socket){
-                        int x = t.getPort();
-                        s.println(x);
+                    for(String t: nameVector){
+                        s.println("~SOCKET_INCOMING!" + t);
                     }
 
+//                    for(Socket t : socket){
+//                        int x = t.getPort();
+//                        s.println(x);
+//                    }
+
                 }
+
+
 
 
                 //out.println(inputLine);
