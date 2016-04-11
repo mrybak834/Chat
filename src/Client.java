@@ -280,6 +280,7 @@ public class Client extends JFrame implements ActionListener
                                     if(username.getText().equals(s)){
 
                                         if(sender_and_message[0].equals(username.getText())){
+                                            System.out.println("got here");
                                             int z = 0;
                                             for(String n: names) {
                                                 //Account for comma
@@ -292,9 +293,16 @@ public class Client extends JFrame implements ActionListener
                                                 }
                                             }
 
-                                            history.insert("PRIVATE (with " + chatNames + " ) : " + sender_and_message[1] + "\n", 0);
+                                                if(chatNames.endsWith(", ")){
+                                                    chatNames = chatNames.substring(0, chatNames.length()-2);
+                                                    chatNames = chatNames + "";
+                                                }
+                                                history.insert("PRIVATE (with " + chatNames + ") : " + sender_and_message[1] + "\n", 0);
+
+
                                         }
                                         else{
+                                            System.out.println("got here2");
                                             chatNames = sender_and_message[0];
                                             history.insert("PRIVATE (with " + sender_and_message[0] + " ) : " + sender_and_message[1] + "\n", 0);
                                         }
