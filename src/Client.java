@@ -214,33 +214,49 @@ public class Client extends JFrame implements ActionListener
                             people.append("Clients connected to the server: \n");
 
                             while(in.ready()) {
+
                                 line = in.readLine();
+
+                                System.out.println(line);
 
                                 //Finished reading sockets
                                 if (line.startsWith("~SOCKETS_ENDED!")){
+                                    people.setText("");
+                                    people.append("Clients connected to the server: \n");
+                                    //Add to user list
+                                    for (String s : currentClientList) {
+                                        people.append(s + "\n");
+                                    }
+
                                     break;
                                 }
 
                                 //If the name is already in the list, error
-                                for (String s : currentClientList) {
-                                    if (s.equals(line.substring(line.lastIndexOf('!') + 1))) {
-                                        JOptionPane.showMessageDialog(null, "Name duplicate, pick a different name and reconnect or you will not be recognized", "Error",
-                                                JOptionPane.ERROR_MESSAGE);
+//                                for (String s : currentClientList) {
+//                                    if (s.equals(line.substring(line.lastIndexOf('!') + 1))) {
+//                                        JOptionPane.showMessageDialog(null, "Name duplicate, pick a different name and reconnect or you will not be recognized", "Error",
+//                                                JOptionPane.ERROR_MESSAGE);
+//                                    }
+//                                }
+
+
+                                //Add name to name list if not a duplicate
+                                int duplicateFound = 0;
+                                if (currentClientList.size() == 0){
+                                    currentClientList.add(line.substring(line.lastIndexOf('!') + 1));
+                                }
+                                else{
+                                    for(String s: currentClientList){
+                                       if (s.equals(line.substring(line.lastIndexOf('!') + 1))){
+                                           duplicateFound = 1;
+                                       }
+                                    }
+
+                                    if (duplicateFound == 0){
+                                        currentClientList.add(line.substring(line.lastIndexOf('!') + 1));
                                     }
                                 }
 
-                                //Get the user name, add if not duplicate
-                                //for(String s: currentClientList){
-                                 //   if (!s.equals(line.substring(line.lastIndexOf('!') + 1))){
-                                        currentClientList.add(line.substring(line.lastIndexOf('!') + 1));
-                                   // }
-                               // }
-
-
-                                //Add to user list
-                                for (String s : currentClientList) {
-                                    people.append(s + "\n");
-                                }
                             }
                         }
                         //Print message to chat pane
