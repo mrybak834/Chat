@@ -17,7 +17,6 @@ public class Server extends JFrame implements ActionListener{
     // Network Items
     boolean serverContinue;
     ServerSocket serverSocket;
-    public Vector<Socket> socketVector;
 
     // set up GUI
     public Server()
@@ -87,14 +86,12 @@ class ConnectionThread extends Thread
 {
     Server gui;
     public Vector<PrintWriter> socketVector;
-    public Vector<Socket> socket;
     public Vector<String> nameVector;
 
     public ConnectionThread (Server es3)
     {
         gui = es3;
         socketVector = new Vector<>();
-        socket = new Vector<>();
         nameVector = new Vector<>();
         start();
     }
@@ -113,7 +110,7 @@ class ConnectionThread extends Thread
                 {
                     System.out.println ("Waiting for Connection");
                     gui.ssButton.setText("Stop Listening");
-                    CommunicationThread thread = new CommunicationThread (gui.serverSocket.accept(), gui, socketVector,socket, nameVector);
+                    CommunicationThread thread = new CommunicationThread (gui.serverSocket.accept(), gui, socketVector, nameVector);
                     thread.start();
                 }
             }
@@ -145,19 +142,15 @@ class ConnectionThread extends Thread
 
 class CommunicationThread extends Thread
 {
-    //private boolean serverContinue = true;
     private Socket clientSocket;
     private Server gui;
     public Vector<PrintWriter> socketVector;
-    public Vector<Socket> socket;
     public Vector<String> nameVector;
 
 
-    public CommunicationThread (Socket clientSoc, Server ec3, Vector<PrintWriter> socketVectorg, Vector<Socket> sock, Vector<String> nameVectorg)
+    public CommunicationThread (Socket clientSoc, Server ec3, Vector<PrintWriter> socketVectorg,Vector<String> nameVectorg)
     {
         clientSocket = clientSoc;
-        sock.add(clientSocket);
-        this.socket = sock;
         this.socketVector = socketVectorg;
         this.nameVector = nameVectorg;
         gui = ec3;
@@ -176,25 +169,25 @@ class CommunicationThread extends Thread
 
             String inputLine;
 
+            //Add the new connection
             socketVector.add(out);
 
 
-
+            //While there is input
             while ((inputLine = in.readLine()) != null) {
-                System.out.println("Server: " + inputLine);
+                //Display message to server
                 gui.history.insert(inputLine + "\n", 0);
 
                 //Add the client name
                 String[] nameSplit = inputLine.split(":");
 
 
-
+                //If it is a new client, add to names
                 if(nameSplit[1] != null && nameSplit[1].startsWith("~NEW_CONNECTION!")) {
-                    System.out.println("GOT HERE " + nameSplit[0]);
                     nameVector.add(nameSplit[0]);
                 }
 
-
+                //Print output to client
                 for(PrintWriter s : socketVector){
                     s.println(inputLine);
 
@@ -206,23 +199,15 @@ class CommunicationThread extends Thread
 
                 }
 
-
-
-
-                //out.println(inputLine);
-
+                //Edge cases
                 if (inputLine.equals("Bye."))
                     break;
 
                 if (inputLine.equals("End Server."))
                     gui.serverContinue = false;
 
-                if (inputLine.equals("!DISCONNECT ME!")){
-                    //TODO
-                }
-
-
             }
+
 
             //Remove client from vector
             for( int i = 0; i < socketVector.size(); i++){
@@ -232,34 +217,25 @@ class CommunicationThread extends Thread
                 }
             }
 
+            //Close the connection
             out.close();
             in.close();
             clientSocket.close();
 
 
-            System.out.println(socketVector.size());
-
-            for(String s: nameVector){
-                System.out.println("NAME: " + s);
-            }
-
             //Refresh client list
             for(PrintWriter s : socketVector){
-
                 s.println("~SOCKETS_INCOMING!");
                 for(String t: nameVector){
                     s.println(t);
                 }
                 s.println("~SOCKETS_ENDED!");
-
             }
 
         }
         catch (IOException e)
         {
-            //LOGOUT CLIENTS HERE (REMOVE FROM VECTOR)
             System.err.println("Problem with Communication Server");
-            //System.exit(1);
         }
     }
 }
