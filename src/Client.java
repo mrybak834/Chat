@@ -5,20 +5,13 @@ import java.awt.event.*;
 import java.util.Vector;
 import javax.swing.*;
 
-import static java.lang.Thread.sleep;
-
-
 //TODO
-
 /**
- * 1. Select who to chat with
- * 2. Refresh the list of clients (add and delete)
- * 3. Check client disconnects properly
  * 4. Fix UI
  * 5. No ~ or , or ! in username or private message names
  * 6. Check for illegal message ~SOCKETS_INCOMING! and ~NEW_CONNECTION! and ~SOCKETS_ENDED!
- * 7. Deactivate name field after connection
  * 8. Check if private message people exist
+ * 9. Prevent from messaging self
  */
 
 public class Client extends JFrame implements ActionListener
@@ -116,13 +109,8 @@ public class Client extends JFrame implements ActionListener
             @Override
             public void windowClosing(WindowEvent e) {
                 try {
-                    System.out.println("CLOSING");
-
                     if(application.echoSocket != null && application.echoSocket.isConnected()) {
                         //Tell the server to decrease the vector of sockets
-                        //TODO
-
-
                         application.echoSocket.close();
                     }
                 } catch (IOException e1) {
@@ -153,7 +141,6 @@ public class Client extends JFrame implements ActionListener
     {
         try
         {
-
             //Global message
             if(sendToNames.getText().equals("")){
                 out.println(username.getText() + ": " + message.getText());
@@ -162,8 +149,6 @@ public class Client extends JFrame implements ActionListener
             else{
                 out.println("!" + sendToNames.getText() + "," + username.getText() + "~" + username.getText() + ":" + message.getText());
             }
-
-
         }
         catch (Exception e) {
             history.insert("Error in processing message ", 0);
@@ -175,9 +160,7 @@ public class Client extends JFrame implements ActionListener
     {
         try
         {
-
             out.println(username.getText() + ":" + "~NEW_CONNECTION!" );
-
         }
         catch (Exception e) {
             history.insert("Error in processing message ", 0);
@@ -385,6 +368,9 @@ public class Client extends JFrame implements ActionListener
                 sendButton.setEnabled(false);
                 connected = false;
                 connectButton.setText("Connect to Server");
+
+                //Clear user list
+                people.setText("");
             }
             catch (IOException e)
             {
