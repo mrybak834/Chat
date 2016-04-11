@@ -16,8 +16,9 @@ import static java.lang.Thread.sleep;
  * 3. Check client disconnects properly
  * 4. Fix UI
  * 5. No ~ or , or ! in username or private message names
- * 6. Check for illegal message ~SOCKET_INCOMING! and ~NEW_CONNECTION!
+ * 6. Check for illegal message ~SOCKETS_INCOMING! and ~NEW_CONNECTION! and ~SOCKETS_ENDED!
  * 7. Deactivate name field after connection
+ * 8. Check if private message people exist
  */
 
 public class Client extends JFrame implements ActionListener
@@ -201,27 +202,46 @@ public class Client extends JFrame implements ActionListener
                 try {
 
                     while(in.ready()) {
+                        //Get the line that is to be displayed in the chat box
                         line = in.readLine();
-                        char c = line.charAt(0);
 
 
-                        System.out.println("GOT HERE");
-                        //If we receive a socket
-                        if( line.startsWith("~SOCKET_INCOMING!"))
+
+                        //If we receive a connection socket
+                        if( line.startsWith("~SOCKETS_INCOMING!"))
                         {
-                            System.out.println("GOT HEREERERERERERER. SOCKET:" + line);
                             people.setText("");
                             people.append("Clients connected to the server: \n");
 
+                            while(in.ready()) {
+                                line = in.readLine();
 
-                            //Get the user name
-                            currentClientList.add(line.substring(line.lastIndexOf('!') + 1));
+                                //Finished reading sockets
+                                if (line.startsWith("~SOCKETS_ENDED!")){
+                                    break;
+                                }
 
-                            //Add to user list
-                            for(String s: currentClientList){
-                                people.append(s + "\n");
+                                //If the name is already in the list, error
+                                for (String s : currentClientList) {
+                                    if (s.equals(line.substring(line.lastIndexOf('!') + 1))) {
+                                        JOptionPane.showMessageDialog(null, "Name duplicate, pick a different name and reconnect or you will not be recognized", "Error",
+                                                JOptionPane.ERROR_MESSAGE);
+                                    }
+                                }
+
+                                //Get the user name, add if not duplicate
+                                //for(String s: currentClientList){
+                                 //   if (!s.equals(line.substring(line.lastIndexOf('!') + 1))){
+                                        currentClientList.add(line.substring(line.lastIndexOf('!') + 1));
+                                   // }
+                               // }
+
+
+                                //Add to user list
+                                for (String s : currentClientList) {
+                                    people.append(s + "\n");
+                                }
                             }
-
                         }
                         //Print message to chat pane
                         else {

@@ -187,18 +187,22 @@ class CommunicationThread extends Thread
                 //Add the client name
                 String[] nameSplit = inputLine.split(":");
 
+
+
                 if(nameSplit[1] != null && nameSplit[1].startsWith("~NEW_CONNECTION!")) {
-                        System.out.println("GOT HERE " + nameSplit[0]);
-                        nameVector.add(nameSplit[0]);
+                    System.out.println("GOT HERE " + nameSplit[0]);
+                    nameVector.add(nameSplit[0]);
                 }
 
 
                 for(PrintWriter s : socketVector){
                     s.println(inputLine);
 
+                    s.println("~SOCKETS_INCOMING!");
                     for(String t: nameVector){
-                        s.println("~SOCKET_INCOMING!" + t);
+                        s.println(t);
                     }
+                    s.println("~SOCKETS_ENDED!");
 
 //                    for(Socket t : socket){
 //                        int x = t.getPort();
