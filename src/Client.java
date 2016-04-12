@@ -33,6 +33,7 @@ public class Client extends JFrame implements ActionListener
     PrintWriter out;
     BufferedReader in;
     Vector<String> currentClientList;
+    messageReceiverThread messageThread;
 
     // set up GUI
     public Client()
@@ -147,7 +148,7 @@ public class Client extends JFrame implements ActionListener
             }
             //Private message
             else{
-                out.println("!" + sendToNames.getText() + "," + username.getText() + "~" + username.getText() + ":" + message.getText());
+                out.println("!" + sendToNames.getText() + "," + username.getText() + "~" + username.getText() + ": " + message.getText());
             }
         }
         catch (Exception e) {
@@ -187,7 +188,6 @@ public class Client extends JFrame implements ActionListener
                     while(in.ready()) {
                         //Get the line that is to be displayed in the chat box
                         line = in.readLine();
-
 
 
                         //If we receive a connection socket
@@ -271,6 +271,16 @@ public class Client extends JFrame implements ActionListener
                                         if(names[z].equals(nameAtPosition) && (y != z)){
                                             names[z] = "";
                                         }
+                                        //If the user is not logged in, blank out
+                                        int loggedIn = 0;
+                                        for(String s : currentClientList){
+                                            if(s.equals(names[z])){
+                                               loggedIn = 1;
+                                            }
+                                        }
+                                        if (loggedIn == 0){
+                                            names[z] = "";
+                                        }
                                     }
                                 }
 
@@ -278,37 +288,41 @@ public class Client extends JFrame implements ActionListener
                                 for(String s: names){
                                     //If the string was sent to us, display
                                     if(username.getText().equals(s)){
-
                                         if(sender_and_message[0].equals(username.getText())){
                                             System.out.println("got here");
                                             int z = 0;
                                             for(String n: names) {
                                                 //Account for comma
-                                                if (z == 0 && !n.equals(username.getText())) {
+                                                if (z == 0 && !n.equals(username.getText()) && !n.equals("")) {
                                                     chatNames = chatNames + n;
                                                     z++;
                                                 }
-                                                else if (!n.equals(username.getText())) {
+                                                else if (!n.equals(username.getText()) && !n.equals("")) {
                                                     chatNames = chatNames + ", " + n;
                                                 }
                                             }
 
-                                                if(chatNames.endsWith(", ")){
-                                                    chatNames = chatNames.substring(0, chatNames.length()-2);
-                                                    chatNames = chatNames + "";
-                                                }
-                                                history.insert("PRIVATE (with " + chatNames + ") : " + sender_and_message[1] + "\n", 0);
+                                            //Handle case where user sends to himself (remove name)
+                                            if(chatNames.endsWith(", ")){
+                                                chatNames = chatNames.substring(0, chatNames.length()-2);
+                                                chatNames = chatNames + "";
+                                            }
+
+                                            //Print if at least one valid (online, non-self-referential) entry
+                                            if( z != 0 ){
+                                                history.insert("PRIVATE (with " + chatNames + ") : " + displayString + "\n", 0);
+                                            }
 
 
                                         }
                                         else{
-                                            System.out.println("got here2");
                                             chatNames = sender_and_message[0];
-                                            history.insert("PRIVATE (with " + sender_and_message[0] + " ) : " + sender_and_message[1] + "\n", 0);
+                                            history.insert("PRIVATE (with " + sender_and_message[0] + ") : " + displayString + "\n", 0);
                                         }
                                     }
                                 }
                             }
+                            //Global message
                             else{
                                 history.insert(line + "\n", 0);
                             }
@@ -316,16 +330,14 @@ public class Client extends JFrame implements ActionListener
 
                     }
 
-                    //System.out.println(line);
-
                 } catch (IOException e) {
-                    e.printStackTrace();
-                    System.out.println("EXCEPTION THROWN");
+                    //e.printStackTrace();
+                    //System.out.println("EXCEPTION THROWN");
                 }
             }
         }
     }
-
+    
     public void doManageConnection()
     {
         if (connected == false)
@@ -344,8 +356,8 @@ public class Client extends JFrame implements ActionListener
                 connectButton.setText("Disconnect from Server");
 
                 //Start listening for messages from the server
-                messageReceiverThread t = new messageReceiverThread(in);
-                t.start();
+                messageThread = new messageReceiverThread(in);
+                messageThread.start();
 
                 //Get the list of clients
                 doSendActivationMessage();
@@ -376,6 +388,9 @@ public class Client extends JFrame implements ActionListener
                 sendButton.setEnabled(false);
                 connected = false;
                 connectButton.setText("Connect to Server");
+
+                //Stop message receiving
+                messageThread.interrupt();
 
                 //Clear user list
                 people.setText("");
