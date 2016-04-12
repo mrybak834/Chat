@@ -185,19 +185,48 @@ class CommunicationThread extends Thread
                 //If it is a new client, add to names
                 if(nameSplit[1] != null && nameSplit[1].startsWith("~NEW_CONNECTION!")) {
                     nameVector.add(nameSplit[0]);
-                }
 
-                //Print output to client
-                for(PrintWriter s : socketVector){
-                    s.println(inputLine);
+                    //Print output to client
+                    for(PrintWriter s : socketVector){
+                        s.println("~SOCKETS_INCOMING!");
+                        for(String t: nameVector){
+                            s.println(t);
+                        }
+                        s.println("~SOCKETS_ENDED!");
 
-                    s.println("~SOCKETS_INCOMING!");
-                    for(String t: nameVector){
-                        s.println(t);
                     }
-                    s.println("~SOCKETS_ENDED!");
-
                 }
+                //If it is a deletion signal, tell user to change name
+                else if(nameSplit[1] != null && nameSplit[1].startsWith("~DELETE_CONNECTION!")) {
+                    nameVector.set(nameVector.size()-1, nameVector.lastElement() + "*");
+
+                    socketVector.lastElement().println("DUPLICATE NAME. PLEASE RE-LOG AND CHANGE YOUR NAME. YOU CANNOT SEND MESSAGES");
+
+                    //Print output to client
+                    for(PrintWriter s : socketVector){
+
+                        s.println("~SOCKETS_INCOMING!");
+                        for(String t: nameVector){
+                            s.println(t);
+                        }
+                        s.println("~SOCKETS_ENDED!");
+
+                    }
+                }
+                else{
+                    //Print output to client
+                    for(PrintWriter s : socketVector){
+                        s.println(inputLine);
+
+                        s.println("~SOCKETS_INCOMING!");
+                        for(String t: nameVector){
+                            s.println(t);
+                        }
+                        s.println("~SOCKETS_ENDED!");
+
+                    }
+                }
+
 
                 //Edge cases
                 if (inputLine.equals("Bye."))

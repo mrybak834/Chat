@@ -10,8 +10,6 @@ import javax.swing.*;
  * 4. Fix UI
  * 5. No ~ or , or ! in username or private message names
  * 6. Check for illegal message ~SOCKETS_INCOMING! and ~NEW_CONNECTION! and ~SOCKETS_ENDED!
- * 8. Check if private message people exist
- * 9. Prevent from messaging self
  */
 
 public class Client extends JFrame implements ActionListener
@@ -211,35 +209,44 @@ public class Client extends JFrame implements ActionListener
                                     for (String s : currentClientList) {
                                         people.append(s + "\n");
                                     }
-
                                     break;
                                 }
 
-                                //If the name is already in the list, error
-                                //TODO
-//                                for (String s : currentClientList) {
-//                                    if (s.equals(line.substring(line.lastIndexOf('!') + 1))) {
-//                                        JOptionPane.showMessageDialog(null, "Name duplicate, pick a different name and reconnect or you will not be recognized", "Error",
-//                                                JOptionPane.ERROR_MESSAGE);
-//                                    }
-//                                }
-
 
                                 //Add name to name list if not a duplicate
-                                int duplicateFound = 0;
                                 if (currentClientList.size() == 0){
                                     currentClientList.add(line.substring(line.lastIndexOf('!') + 1));
                                 }
                                 else{
+                                    String name = line.substring(line.lastIndexOf('!') + 1);
+                                    int duplicateCounter = 0;
                                     for(String s: currentClientList){
-                                       if (s.equals(line.substring(line.lastIndexOf('!') + 1))){
-                                           duplicateFound = 1;
+                                       //Duplicate found
+                                        if (s.equals(name)){
+                                           duplicateCounter++;
                                        }
                                     }
 
-                                    if (duplicateFound == 0){
-                                        currentClientList.add(line.substring(line.lastIndexOf('!') + 1));
+
+                                    if(duplicateCounter == 0) {
+                                        currentClientList.add(name);
                                     }
+                                    //Duplicate, append a suffix
+                                    else{
+                                        //doManageConnection();
+                                        try
+                                        {
+                                            out.println(name + ":" + "~DELETE_CONNECTION!" );
+                                        }
+                                        catch (Exception e) {
+                                            history.insert("Error in processing message ", 0);
+                                        }
+
+                                        //username.setText(name + "*");
+
+                                        //doManageConnection();
+                                    }
+
                                 }
 
                             }
@@ -337,7 +344,8 @@ public class Client extends JFrame implements ActionListener
             }
         }
     }
-    
+
+
     public void doManageConnection()
     {
         if (connected == false)
