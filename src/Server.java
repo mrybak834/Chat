@@ -5,6 +5,22 @@ import java.awt.event.*;
 import java.util.Vector;
 import javax.swing.*;
 
+
+
+/**
+ * Server.java - The server handles many client connections and relays information
+ * related to messages and name display to each client through ports. The server must
+ * be initialized before any client can connect, and all information relay is handled
+ * automatically.
+ * @version     1.0.0
+ * @university  University of Illinois at Chicago
+ * @course      CS342 - Software Design
+ * @package     Project #04 - Chat
+ * @category    Server
+ * @author      Marek Rybakiewicz
+ * @author      Michael McClory
+ * @license     GNU Public License <http://www.gnu.org/licenses/gpl-3.0.txt>
+ */
 public class Server extends JFrame implements ActionListener{
 
     // GUI items
@@ -57,13 +73,14 @@ public class Server extends JFrame implements ActionListener{
 
     } // end CountDown constructor
 
+    //Initialize the server
     public static void main( String args[] )
     {
         Server application = new Server();
         application.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
     }
 
-    // handle button event
+    // Handle the button event
     public void actionPerformed( ActionEvent event )
     {
         if (running == false)
@@ -79,9 +96,13 @@ public class Server extends JFrame implements ActionListener{
     }
 
 
-} // end class EchoServer3
+} // End of Server class
 
-
+/**
+ * Attempts to establish a connection for the server to operate under,
+ * and leaves the server in a running state through the thread in order to listen
+ * to incoming connections
+ */
 class ConnectionThread extends Thread
 {
     Server gui;
@@ -137,9 +158,14 @@ class ConnectionThread extends Thread
             }
         }
     }
-}
+} //End of ConnectionThread class
 
-
+/**
+ * Handles all communications that are relayed through the server. Each client is designated with an input and output
+ * stream. Since the streams are stored in a vector, clients are allowed to pick specific people they wish to communicate
+ * with or may select to distribute the message globally. When a client shuts down connections, all related information
+ * is removed from the server as well.
+ */
 class CommunicationThread extends Thread
 {
     private Socket clientSocket;
@@ -267,4 +293,4 @@ class CommunicationThread extends Thread
             System.err.println("Problem with Communication Server");
         }
     }
-}
+} // End of CommunicationThread class

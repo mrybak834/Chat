@@ -5,13 +5,22 @@ import java.awt.event.*;
 import java.util.Vector;
 import javax.swing.*;
 
-//TODO
 /**
- * 4. Fix UI
- * 5. No ~ or , or ! in username or private message names
- * 6. Check for illegal message ~SOCKETS_INCOMING! and ~NEW_CONNECTION! and ~SOCKETS_ENDED!
+ * Client.java - This class holds all of the information required for GUI display, connections
+ * to the server, as well as information relay of names and messages.
+ * Many instances of the chat executable are allowed to connect to the server, and all information
+ * is abstracted away from clients by passing through the server.
+ * A client must first connect to the server with a unique name, then message sending capabilities are
+ * enabled, and the connection will close upon clicking the button or the exit field of the GUI.
+ * @version     1.0.0
+ * @university  University of Illinois at Chicago
+ * @course      CS342 - Software Design
+ * @package     Project #04 - Chat
+ * @category    GUI
+ * @author      Marek Rybakiewicz
+ * @author      Michael McClory
+ * @license     GNU Public License <http://www.gnu.org/licenses/gpl-3.0.txt>
  */
-
 public class Client extends JFrame implements ActionListener
 {
     // GUI items
@@ -33,7 +42,9 @@ public class Client extends JFrame implements ActionListener
     Vector<String> currentClientList;
     messageReceiverThread messageThread;
 
-    // set up GUI
+    /**
+     * Sets up the GUI and initializes the client list vector.
+     */
     public Client()
     {
         super( "Echo Client" );
@@ -44,33 +55,52 @@ public class Client extends JFrame implements ActionListener
 
         // set up the North panel
         JPanel upperPanel = new JPanel ();
-        upperPanel.setLayout (new GridLayout (6,2));
+        upperPanel.setLayout (new GridLayout (7,3));
         container.add (upperPanel, BorderLayout.NORTH);
 
         // create buttons
         connected = false;
 
-        upperPanel.add ( new JLabel ("Message: ", JLabel.RIGHT) );
+        upperPanel.add ( new JLabel ("Server Address: ", JLabel.CENTER) );
+        upperPanel.add ( new JLabel ("", JLabel.CENTER));
+        upperPanel.add ( new JLabel ("Username: ", JLabel.CENTER) );
+
+        machineInfo = new JTextField ("127.0.0.1");
+        upperPanel.add( machineInfo );
+        upperPanel.add ( new JLabel ("", JLabel.CENTER));
+        username = new JTextField ("");
+        username.addActionListener( this );
+        upperPanel.add( username );
+
+        upperPanel.add ( new JLabel ("Server Port: ", JLabel.CENTER) );
+        upperPanel.add ( new JLabel ("", JLabel.CENTER));
+        upperPanel.add ( new JLabel ("Send to: ", JLabel.CENTER) );
+
+        portInfo = new JTextField ("");
+        upperPanel.add( portInfo );
+        upperPanel.add ( new JLabel ("", JLabel.CENTER));
+        sendToNames = new JTextField ("");
+        sendToNames.addActionListener( this );
+        upperPanel.add( sendToNames );
+
+        upperPanel.add ( new JLabel ("", JLabel.CENTER));
+        upperPanel.add ( new JLabel ("", JLabel.CENTER));
+
+        upperPanel.add ( new JLabel ("Message: ", JLabel.CENTER) );
+        connectButton = new JButton( "Connect to Server" );
+        connectButton.addActionListener( this );
+        upperPanel.add( connectButton );
+        upperPanel.add ( new JLabel ("", JLabel.CENTER));
         message = new JTextField ("");
         message.addActionListener( this );
         upperPanel.add( message );
 
+        upperPanel.add ( new JLabel ("", JLabel.CENTER));
+        upperPanel.add ( new JLabel ("", JLabel.CENTER));
         sendButton = new JButton( "Send Message" );
         sendButton.addActionListener( this );
         sendButton.setEnabled (false);
         upperPanel.add( sendButton );
-
-        connectButton = new JButton( "Connect to Server" );
-        connectButton.addActionListener( this );
-        upperPanel.add( connectButton );
-
-        upperPanel.add ( new JLabel ("Server Address: ", JLabel.RIGHT) );
-        machineInfo = new JTextField ("127.0.0.1");
-        upperPanel.add( machineInfo );
-
-        upperPanel.add ( new JLabel ("Server Port: ", JLabel.RIGHT) );
-        portInfo = new JTextField ("");
-        upperPanel.add( portInfo );
 
         history = new JTextArea ( 10, 35 );
         history.setEditable(false);
@@ -81,24 +111,19 @@ public class Client extends JFrame implements ActionListener
         people.append("Clients connected to the server:\n");
         container.add( new JScrollPane(people) ,  BorderLayout.WEST);
 
-        upperPanel.add ( new JLabel ("Username: ", JLabel.RIGHT) );
-        username = new JTextField ("");
-        username.addActionListener( this );
-        upperPanel.add( username );
 
-
-        upperPanel.add ( new JLabel ("Send to: ", JLabel.RIGHT) );
-        sendToNames = new JTextField ("");
-        sendToNames.addActionListener( this );
-        upperPanel.add( sendToNames );
-
-        setSize( 800, 400 );
+        setSize( 683, 600 );
         setVisible( true );
 
         currentClientList = new Vector<>();
 
-    } // end CountDown constructor
+    } // end Client constructor
 
+
+    /**
+     * Instantiates the class and sets closing behavior to make sure the socket also disconnects
+     * @param args
+     */
     public static void main( String args[] )
     {
         final Client application = new Client();
@@ -119,9 +144,15 @@ public class Client extends JFrame implements ActionListener
         });
 
         application.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
-    }
+    } // End of main method
 
-    // handle button event
+    /**
+     * Handles the button events,
+     * activating/deactivating connections to the server and
+     * activating message processing.
+     *
+     * @param event
+     */
     public void actionPerformed( ActionEvent event )
     {
         if ( connected &&
@@ -134,12 +165,33 @@ public class Client extends JFrame implements ActionListener
         {
             doManageConnection();
         }
-    }
+    } // End of actionPerformed method
 
+    /**
+     * Sends a message to the server.
+     * A check is done to ensure the client is not maliciously injecting server commands, after which
+     * the type of message is checked and sent out to the server for processing.
+     */
     public void doSendMessage()
     {
         try
         {
+            //Check for illegal server commands in message and replace
+            if(message.getText().contains("~SOCKETS_INCOMING!") || message.getText().contains("~NEW_CONNECTION!") || message.getText().contains("~SOCKETS_ENDED!") ){
+                JOptionPane.showMessageDialog(null, "ILLEGAL SERVER COMMAND CONTAINED IN MESSAGE. REMOVING PORTION.", "Error",
+                        JOptionPane.ERROR_MESSAGE);
+
+                //Repetition of statements needed to check all cases
+                if(message.getText().contains("~SOCKETS_INCOMING!"))
+                    message.setText(message.getText().replace("~SOCKETS_INCOMING!",""));
+
+                if(message.getText().contains("~NEW_CONNECTION!"))
+                    message.setText(message.getText().replace("~NEW_CONNECTION!",""));
+
+                if(message.getText().contains("~SOCKETS_ENDED!"))
+                    message.setText(message.getText().replace("~SOCKETS_ENDED!",""));
+            }
+
             //Global message
             if(sendToNames.getText().equals("")){
                 out.println(username.getText() + ": " + message.getText());
@@ -152,9 +204,13 @@ public class Client extends JFrame implements ActionListener
         catch (Exception e) {
             history.insert("Error in processing message ", 0);
         }
-    }
+    } // End of doSendMessage method
 
-    //Send a false message in order for the server to process and return the list of clients
+    /**
+     * Called upon a new client logging in.
+     * Sends a false message indicating a new connection to the server,
+     * refreshing the client list in order to be current.
+     */
     public void doSendActivationMessage()
     {
         try
@@ -164,9 +220,15 @@ public class Client extends JFrame implements ActionListener
         catch (Exception e) {
             history.insert("Error in processing message ", 0);
         }
-    }
+    } // End doSendActivationMessage method
 
 
+    /**
+     * The messageReceiverThread thread actively awaits input from the server and processes it accordingly.
+     * Messages are first checked for global or private flags, upon which names are processed for the receiver list,
+     * and the message is distributed.
+     * Client list updates occur whenever a client connects or disconnects.
+     */
     public class messageReceiverThread extends Thread{
         BufferedReader in;
 
@@ -174,32 +236,24 @@ public class Client extends JFrame implements ActionListener
             this.in = in;
         }
 
+        //Run the thread, waiting for input from the server
         public void run() {
-            int i = 0;
             String line;
-            int count = 0;
-
             while(true){
 
                 try {
-
                     while(in.ready()) {
                         //Get the line that is to be displayed in the chat box
                         line = in.readLine();
 
-
                         //If we receive a connection socket
                         if( line.startsWith("~SOCKETS_INCOMING!"))
                         {
-
                             //Reset vector
                             currentClientList.removeAllElements();
 
                             while(in.ready()) {
-
                                 line = in.readLine();
-
-                                System.out.println(line);
 
                                 //Finished reading sockets
                                 if (line.startsWith("~SOCKETS_ENDED!")){
@@ -211,7 +265,6 @@ public class Client extends JFrame implements ActionListener
                                     }
                                     break;
                                 }
-
 
                                 //Add name to name list if not a duplicate
                                 if (currentClientList.size() == 0){
@@ -227,13 +280,11 @@ public class Client extends JFrame implements ActionListener
                                        }
                                     }
 
-
                                     if(duplicateCounter == 0) {
                                         currentClientList.add(name);
                                     }
-                                    //Duplicate, append a suffix
+                                    //Duplicate, notify the user to rename themselves
                                     else{
-                                        //doManageConnection();
                                         try
                                         {
                                             out.println(name + ":" + "~DELETE_CONNECTION!" );
@@ -241,10 +292,6 @@ public class Client extends JFrame implements ActionListener
                                         catch (Exception e) {
                                             history.insert("Error in processing message ", 0);
                                         }
-
-                                        //username.setText(name + "*");
-
-                                        //doManageConnection();
                                     }
 
                                 }
@@ -296,7 +343,6 @@ public class Client extends JFrame implements ActionListener
                                     //If the string was sent to us, display
                                     if(username.getText().equals(s)){
                                         if(sender_and_message[0].equals(username.getText())){
-                                            System.out.println("got here");
                                             int z = 0;
                                             for(String n: names) {
                                                 //Account for comma
@@ -338,14 +384,18 @@ public class Client extends JFrame implements ActionListener
                     }
 
                 } catch (IOException e) {
-                    //e.printStackTrace();
-                    //System.out.println("EXCEPTION THROWN");
                 }
             }
         }
-    }
+    } // End of messageReceiverThread class
 
-
+    /**
+     * Initializes or stops a connection with the server.
+     * Upon initialization an activity message is sent to the server in order to log the username,
+     * and then processing is passed to the messageReceiverThread which actively waits for input
+     * from the server.
+     * Upon closing the connection all information about the client is removed from the server.
+     */
     public void doManageConnection()
     {
         if (connected == false)
@@ -366,6 +416,21 @@ public class Client extends JFrame implements ActionListener
                 //Start listening for messages from the server
                 messageThread = new messageReceiverThread(in);
                 messageThread.start();
+
+                //Check if illegal username, fix if so
+                if(username.getText().contains("!") || username.getText().contains("~") || username.getText().contains(",")){
+                    JOptionPane.showMessageDialog(null, "ILLEGAL CHARACTER IN USERNAME. REMOVING PORTION", "Error",
+                            JOptionPane.ERROR_MESSAGE);
+
+                    if(username.getText().contains("!"))
+                        username.setText(username.getText().replace("!", ""));
+
+                    if(username.getText().contains("~"))
+                        username.setText(username.getText().replace("~", ""));
+
+                    if(username.getText().contains(","))
+                        username.setText(username.getText().replace(",", ""));
+                }
 
                 //Get the list of clients
                 doSendActivationMessage();
@@ -409,7 +474,6 @@ public class Client extends JFrame implements ActionListener
             }
         }
 
+    } // End of doManageConnection class
 
-    }
-
-} // end class EchoServer3
+} // end of Client class
